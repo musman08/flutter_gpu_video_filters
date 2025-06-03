@@ -63,4 +63,8 @@ abstract class VideoPreviewApi {
   void pause(int textureId, bool embedded);
 
   void dispose(int textureId, bool embedded);
+
+  int getDuration(int textureId, bool embedded);
+
+  int getCurrentPosition(int textureId, bool embedded);
 }

@@ -192,6 +192,32 @@ class VideoPreviewApiImpl(
     }
 
     @UnstableApi
+    override fun getCurrentPosition(textureId: Long, embedded: Boolean): Long {
+        if (!embedded) {
+            val videoSource = videosSources[textureId]
+            return videoSource.player.getCurrentPosition()
+        }
+        if (embedded) {
+            val videoPreview = videosPreviews[textureId]
+            return videoPreview.player.getCurrentPosition()
+        }
+        return 0
+    }
+
+    @UnstableApi
+    override fun getDuration(textureId: Long, embedded: Boolean): Long {
+        if (!embedded) {
+            val videoSource = videosSources[textureId]
+            return videoSource.player.getDuration()
+        }
+        if (embedded) {
+            val videoPreview = videosPreviews[textureId]
+            return videoPreview.player.getDuration()
+        }
+        return 0
+    }
+
+    @UnstableApi
     override fun dispose(textureId: Long, embedded: Boolean) {
         if (!embedded) {
             val videoSource = videosSources[textureId]

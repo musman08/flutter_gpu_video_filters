@@ -78,4 +78,17 @@ class GPUVideoPreviewController extends VideoPreviewController {
   Future<void> pause() async {
     await _api.pause(textureId, _embedded);
   }
+
+  /// Get current position of the video
+  @override
+  Future<int> getCurrentPosition() async {
+    return await _api.getCurrentPosition(textureId, _embedded);
+  }
+
+  /// Get total duration of the video
+  @override
+  Future<int> getDuration() async {
+    return await _api.getDuration(textureId, _embedded);
+  }
+
 }
