@@ -7,7 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart' hide Rect;
 import 'package:flutter_gpu_video_filters/flutter_gpu_video_filters.dart';
 import 'package:flutter_gpu_filters_interface/flutter_gpu_filters_interface.dart';
-import 'package:photo_manager/photo_manager.dart';
+// import 'package:photo_manager/photo_manager.dart';
 
 import 'approved_filters.dart';
 import 'filters.dart';
@@ -367,25 +367,4 @@ class _FilterPageState2 extends State<FilterPage2> {
   }
 }
 
-Future<void> _saveFile(File input) async {
-  try {
-    final status = await PhotoManager.requestPermissionExtend(
-      requestOption: const PermissionRequestOption(
-        androidPermission: AndroidPermission(
-          type: RequestType.video,
-          mediaLocation: false,
-        ),
-      ),
-    );
-    if (status.isAuth || status.hasAccess) {
-      await PhotoManager.editor.saveVideo(
-        input,
-        title: input.uri.pathSegments.last,
-      );
-    }
-  } catch (e, s) {
-    debugPrint('Error saving file to gallery: $e');
-    debugPrintStack(stackTrace: s);
-    rethrow;
-  }
-}
+Future<void> _saveFile(File input) async {}
