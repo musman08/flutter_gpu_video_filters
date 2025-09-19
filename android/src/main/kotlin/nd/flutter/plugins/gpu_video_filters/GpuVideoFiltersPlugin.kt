@@ -217,6 +217,18 @@ class VideoPreviewApiImpl(
     }
 
     @UnstableApi
+    override fun seekTo(textureId: Long, embedded: Boolean, position: Long) {
+        if (!embedded) {
+            val videoSource = videosSources[textureId]
+            videoSource.player.seekTo(position);
+        }
+        if (embedded) {
+            val videoPreview = videosPreviews[textureId]
+            videoPreview.player.seekTo(position);
+        }
+    }
+
+    @UnstableApi
     override fun getDuration(textureId: Long, embedded: Boolean): Long {
         if (!embedded) {
             val videoSource = videosSources[textureId]

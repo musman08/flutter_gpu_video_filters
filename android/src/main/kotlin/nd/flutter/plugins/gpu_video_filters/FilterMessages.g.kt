@@ -232,6 +232,7 @@ interface VideoPreviewApi {
   fun dispose(textureId: Long, embedded: Boolean)
   fun getDuration(textureId: Long, embedded: Boolean): Long
   fun getCurrentPosition(textureId: Long, embedded: Boolean): Long
+  fun seekTo(textureId: Long, embedded: Boolean, position: Long)
 
   companion object {
     /** The codec used by VideoPreviewApi. */
@@ -401,6 +402,26 @@ interface VideoPreviewApi {
             val embeddedArg = args[1] as Boolean
             val wrapped: List<Any?> = try {
               listOf(api.getCurrentPosition(textureIdArg, embeddedArg))
+            } catch (exception: Throwable) {
+              FilterMessagesPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_gpu_video_filters.VideoPreviewApi.seekTo$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val textureIdArg = args[0] as Long
+            val embeddedArg = args[1] as Boolean
+            val positionArg = args[2] as Long
+            val wrapped: List<Any?> = try {
+              api.seekTo(textureIdArg, embeddedArg, positionArg)
+              listOf(null)
             } catch (exception: Throwable) {
               FilterMessagesPigeonUtils.wrapError(exception)
             }
