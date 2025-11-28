@@ -24,19 +24,17 @@ import javax.microedition.khronos.opengles.GL10;
 class DynamicTextureShaderProgram extends BaseGlShaderProgram {
     GlProgram glProgram;
     private final int[] textures;
-    private final String secondTexture;
-    Bitmap secondBitmap;
+    final Map<String, Bitmap> externalBitmaps;
+
     private boolean released = false;
     public DynamicTextureShaderProgram(String vertexShader, String fragmentShader,
-                                String secondTexture,
-                                Bitmap secondBitmap,
+                                Map<String, Bitmap> externalBitmaps,
                                 Map<String, Float> currentFloats,
                                 Map<String, float[]> currentArrayFloats,
                                 boolean useHdr) throws VideoFrameProcessingException {
-        super(useHdr, secondTexture == null ? 1 : 2);
-        this.secondBitmap = secondBitmap;
-        this.secondTexture = secondTexture;
-        this.textures = new int[secondTexture != null ? 1 : 0];
+        super(useHdr, 1 + (externalBitmaps != null ? externalBitmaps.size() : 0));
+        this.externalBitmaps = externalBitmaps;
+        this.textures = new int[externalBitmaps != null ? externalBitmaps.size() : 0];
         try {
             glProgram = new GlProgram(vertexShader, fragmentShader);;
         } catch (GlUtil.GlException e) {
@@ -54,21 +52,27 @@ class DynamicTextureShaderProgram extends BaseGlShaderProgram {
             glProgram.setFloatsUniform(key, checkNotNull(currentArrayFloats.get(key)));
         }
 
-        if (secondTexture != null) {
+        if (externalBitmaps != null && !externalBitmaps.isEmpty()) {
             if (vertexShader.contains("aTexCoords")) {
                 glProgram.setBufferAttribute(
                         "aTexCoords",
                         GlUtil.getTextureCoordinateBounds(),
                         GlUtil.HOMOGENEOUS_COORDINATE_VECTOR_SIZE);
             }
-            GLES20.glGenTextures(1, textures, 0);
-            GLES20.glBindTexture(GL10.GL_TEXTURE_2D, textures[0]);
-            GLES20.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-            GLES20.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-            GLES20.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_REPEAT);
-            GLES20.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_REPEAT);
-            if (secondBitmap != null) {
-                GLUtils.texImage2D(GL10.GL_TEXTURE_2D, /* level= */ 0, secondBitmap, /* border= */ 0);
+            GLES20.glGenTextures(textures.length, textures, 0);
+            int i = 0;
+            for (Map.Entry<String, Bitmap> entry : externalBitmaps.entrySet()) {
+                GLES20.glBindTexture(GL10.GL_TEXTURE_2D, textures[i]);
+                GLES20.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+                GLES20.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+                GLES20.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_REPEAT);
+                GLES20.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_REPEAT);
+                if (entry.getValue() != null) {
+                    GLUtils.texImage2D(GL10.GL_TEXTURE_2D, /* level= */ 0, entry.getValue(), /* border= */ 0);
+                } else {
+                    GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, 1, 1, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
+                }
+                i++;
             }
         }
     }
@@ -82,17 +86,27 @@ class DynamicTextureShaderProgram extends BaseGlShaderProgram {
     @Override
     public void drawFrame(int inputTexId, long presentationTimeUs) throws VideoFrameProcessingException {
         try {
-            if (secondTexture != null && secondBitmap != null) {
-                GLES20.glBindTexture(GL10.GL_TEXTURE_2D, textures[0]);
-                GLUtils.texImage2D(GL10.GL_TEXTURE_2D, /* level= */ 0, secondBitmap, /* border= */ 0);
-                GlUtil.checkGlError();
+            if (externalBitmaps != null && !externalBitmaps.isEmpty()) {
+                int i = 0;
+                for (Map.Entry<String, Bitmap> entry : externalBitmaps.entrySet()) {
+                    GLES20.glBindTexture(GL10.GL_TEXTURE_2D, textures[i]);
+                    if (entry.getValue() != null) {
+                        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, /* level= */ 0, entry.getValue(), /* border= */ 0);
+                    }
+                    GlUtil.checkGlError();
+                    i++;
+                }
             }
             checkStateNotNull(glProgram).use();
 
             GlUtil.checkGlError();
             glProgram.setSamplerTexIdUniform("inputImageTexture", inputTexId, /* texUnitIndex= */ 0);
-            if (secondTexture != null) {
-                glProgram.setSamplerTexIdUniform(secondTexture, textures[0], /* texUnitIndex= */ 1);
+            if (externalBitmaps != null && !externalBitmaps.isEmpty()) {
+                int i = 0;
+                for (Map.Entry<String, Bitmap> entry : externalBitmaps.entrySet()) {
+                    glProgram.setSamplerTexIdUniform(entry.getKey(), textures[i], /* texUnitIndex= */ i + 1);
+                    i++;
+                }
             }
             glProgram.bindAttributesAndUniforms();
             // The four-vertex triangle strip forms a quad.
@@ -123,8 +137,7 @@ class DynamicTextureShaderProgram extends BaseGlShaderProgram {
 public class DynamicTextureProcessor {
     private final String vertexShader;
     private final String fragmentShader;
-    private final String secondTexture;
-    private Bitmap secondBitmap;
+    private final Map<String, Bitmap> externalBitmaps = new HashMap<>();
     public OnUniformsUpdater onUniformsUpdater;
 
     private DynamicTextureShaderProgram textureEffect;
@@ -132,10 +145,14 @@ public class DynamicTextureProcessor {
             String vertexShader, String fragmentShader,
             Map<String, Float> fragmentDefaultFloats,
             Map<String, float[]> fragmentDefaultArrayFloats,
-            String secondTexture) {
+            java.util.List<String> textureNames) {
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
-        this.secondTexture = secondTexture;
+        if (textureNames != null) {
+            for (String name : textureNames) {
+                this.externalBitmaps.put(name, null);
+            }
+        }
         for (String key : fragmentDefaultFloats.keySet()) {
             currentFloats.put(key, fragmentDefaultFloats.get(key));
         }
@@ -146,12 +163,12 @@ public class DynamicTextureProcessor {
     }
 
     DynamicTextureShaderProgram create(boolean useHdr) throws VideoFrameProcessingException {
-        textureEffect = new DynamicTextureShaderProgram(vertexShader, fragmentShader, secondTexture, secondBitmap, currentFloats, currentArrayFloats, useHdr);
+        textureEffect = new DynamicTextureShaderProgram(vertexShader, fragmentShader, externalBitmaps, currentFloats, currentArrayFloats, useHdr);
         return textureEffect;
     }
 
     DynamicTextureShaderProgram createComposition(boolean useHdr) throws VideoFrameProcessingException {
-        return new DynamicTextureShaderProgram(vertexShader, fragmentShader, secondTexture, secondBitmap, currentFloats, currentArrayFloats, useHdr);
+        return new DynamicTextureShaderProgram(vertexShader, fragmentShader, externalBitmaps, currentFloats, currentArrayFloats, useHdr);
     }
 
     private final Map<String, Float> currentFloats = new HashMap<>();
@@ -178,9 +195,9 @@ public class DynamicTextureProcessor {
     }
 
     public void setBitmap(String name, Bitmap value) {
-        this.secondBitmap = value;
+        this.externalBitmaps.put(name, value);
         if (textureEffect != null && textureEffect.glProgram != null) {
-            textureEffect.secondBitmap = value;
+            textureEffect.externalBitmaps.put(name, value);
         }
         if (onUniformsUpdater != null) {
             onUniformsUpdater.setBitmapUniform(name, value);

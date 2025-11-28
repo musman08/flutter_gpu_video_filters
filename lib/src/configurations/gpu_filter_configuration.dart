@@ -31,8 +31,16 @@ abstract class GPUFilterConfiguration extends FilterConfiguration
   @override
   FutureOr<void> prepare() async {
     if (_filterId == -1) {
+      final textures =
+          parameters.whereType<GLBitmapParameter>().map((e) => e.name).toList();
+
+      var vertexShaderName = _exportVertex;
+      if (textures.isNotEmpty && _exportVertex == 'Vertex') {
+        vertexShaderName = 'VertexTwoTextures';
+      }
+
       final vertexShader = await _assetBundle.loadString(
-        '$_vertexShadersPath/$_exportVertex.glsl',
+        '$_vertexShadersPath/$vertexShaderName.glsl',
       );
       final fragmentShader = await _assetBundle.loadString(
         '$_fragmentShadersPath/$name.glsl',
@@ -57,9 +65,6 @@ abstract class GPUFilterConfiguration extends FilterConfiguration
           .whereNot((e) => e.compute)
           .whereType<VectorParameter>()
           .groupFoldBy((e) => e.name, (_, e) => e.floats64);
-
-      final textures =
-          parameters.whereType<GLBitmapParameter>().singleOrNull?.name;
 
       final filterId = await _api.create(
         vertexShader,

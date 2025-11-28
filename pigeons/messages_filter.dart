@@ -22,7 +22,7 @@ abstract class FilterApi {
     String fragmentShader,
     Map<String, double> defaults,
     Map<String, Float64List> arrays,
-    String? texture,
+    List<String>? textures,
   );
 
   int exportVideoFile(
