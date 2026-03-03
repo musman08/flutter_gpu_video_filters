@@ -116,6 +116,7 @@ abstract class GPUFilterConfiguration extends FilterConfiguration
       output.absolute.path,
       format.platformKey,
       period.inMilliseconds,
+      config.height,
     );
 
     final stream =

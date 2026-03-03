@@ -32,6 +32,7 @@ abstract class FilterApi {
     String output,
     String format,
     int period,
+    int? height,
   );
 
   void setFloatParameter(int filterId, String key, double value);

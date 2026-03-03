@@ -353,6 +353,7 @@ class _FilterPageState2 extends State<FilterPage2> {
             ? AssetInputSource(asset)
             : FileInputSource(latestFile!),
         output,
+        height: 3840,
       ),
     );
     await for (final progress in processStream) {

@@ -12,6 +12,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.GlEffect
+import androidx.media3.effect.Presentation
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.DefaultEncoderFactory
 import androidx.media3.transformer.DefaultMuxer
@@ -46,7 +47,7 @@ class VideoFilterApiImpl(private val binding: FlutterPlugin.FlutterPluginBinding
     }
 
     @UnstableApi
-    override fun exportVideoFile(filterId: Long, asset: Boolean, input: String, output: String, format: String, period: Long): Long {
+    override fun exportVideoFile(filterId: Long, asset: Boolean, input: String, output: String, format: String, period: Long, height: Long?): Long {
         val processor = filters[filterId]
         val mediaUri = if (asset) {
             val assetPath = binding.flutterAssets.getAssetFilePathByName(input)
@@ -59,7 +60,7 @@ class VideoFilterApiImpl(private val binding: FlutterPlugin.FlutterPluginBinding
         val eventChannel = EventChannel(binding.binaryMessenger, "Transformer_$transformerId")
         val transform = createTransformer()
 
-        val streamHandler = TransformerStreamHandler(transform, processor, mediaUri, output, period)
+        val streamHandler = TransformerStreamHandler(transform, processor, mediaUri, output, period, height)
         eventChannel.setStreamHandler(streamHandler)
         return transformerId
     }
@@ -120,7 +121,8 @@ class TransformerStreamHandler(private val transform: Transformer,
                                private var processor: DynamicTextureProcessor,
                                private val mediaUri: Uri,
                                private val outputPath: String,
-                               private val period: Long) : EventChannel.StreamHandler, Transformer.Listener, Runnable {
+                               private val period: Long,
+                               private val height: Long?) : EventChannel.StreamHandler, Transformer.Listener, Runnable {
     private var eventSink: EventChannel.EventSink? = null
     private val progressHolder: ProgressHolder = ProgressHolder()
     private val mainHandler: Handler = Handler(getMainLooper())
@@ -156,6 +158,11 @@ class TransformerStreamHandler(private val transform: Transformer,
                 GlEffect { _: Context?, useHdr: Boolean ->
                     processor.createComposition(useHdr)
                 })
+
+        height?.let {
+            videoEffects.add(Presentation.createForHeight(it.toInt()))
+        }
+
         editedMediaItemBuilder
                 .setRemoveAudio(false)
                 .setRemoveVideo(false)
