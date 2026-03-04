@@ -160,6 +160,7 @@ class TransformerStreamHandler(private val transform: Transformer,
                 })
 
         height?.let {
+            println("Height for video: ${it.toInt()}")
             videoEffects.add(Presentation.createForHeight(it.toInt()))
         }
 
