@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io' show File;
 import 'dart:math';
-import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart' hide Rect;
 import 'package:flutter_gpu_video_filters/flutter_gpu_video_filters.dart';
@@ -368,5 +367,5 @@ class _FilterPageState2 extends State<FilterPage2> {
 }
 
 Future<void> _saveFile(File input) async {
-  await Gal.putVideo(input.path);
+  // await Gal.putVideo(input.path);
 }
