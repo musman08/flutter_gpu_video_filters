@@ -29,3 +29,5 @@ migrate_working_dir/
 .packages
 build/
 coverage/
+config.bat
+node_modules
