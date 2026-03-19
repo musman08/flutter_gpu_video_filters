@@ -74,10 +74,10 @@ void main() {
       setUp(() async {
         await configuration.prepare();
         when(
-          mockFilterApi.exportVideoFile(101, true, any, any, 'mov', 1000),
+          mockFilterApi.exportVideoFile(101, true, any, any, 'mov', 1000, any),
         ).thenAnswer((_) async => 201);
         when(
-          mockFilterApi.exportVideoFile(101, false, any, any, 'mp4', 1000),
+          mockFilterApi.exportVideoFile(101, false, any, any, 'mp4', 1000, any),
         ).thenAnswer((_) async => 201);
       });
       tearDown(() async {
@@ -102,6 +102,30 @@ void main() {
             output.absolute.path,
             'mov',
             1000,
+            null,
+          ),
+        ).called(1);
+      });
+      test('export from asset with height', () async {
+        const asset = 'demo.mov';
+        final output = File(asset);
+        final config = VideoExportConfig(
+          AssetInputSource(asset),
+          output,
+          height: 720,
+        );
+        await configuration.update();
+        configuration.exportVideoFile(config).listen((event) {});
+        await Future.delayed(const Duration(milliseconds: 100));
+        verify(
+          mockFilterApi.exportVideoFile(
+            101,
+            true,
+            'demo.mov',
+            output.absolute.path,
+            'mov',
+            1000,
+            720,
           ),
         ).called(1);
       });

@@ -1,5 +1,7 @@
 package nd.flutter.plugins.gpu_video_filters
 
+import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.LoadControl
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
@@ -51,8 +53,18 @@ class GpuVideoFiltersPlugin : FlutterPlugin {
 @UnstableApi
 class VideoTexture(val texture: TextureRegistry.SurfaceProducer, context: Context) :
     Player.Listener, EventChannel.StreamHandler {
+    val loadControl = DefaultLoadControl.Builder()
+        .setBufferDurationsMs(
+            DefaultLoadControl.DEFAULT_MIN_BUFFER_MS / 2,
+            DefaultLoadControl.DEFAULT_MAX_BUFFER_MS / 4,
+            DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS / 2,
+            DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS / 2
+        )
+        .setTargetBufferBytes(DefaultLoadControl.DEFAULT_TARGET_BUFFER_BYTES / 4)
+        .setPrioritizeTimeOverSizeThresholds(true)
+        .build()
     var filter: DynamicTextureProcessor? = null
-    val player: ExoPlayer = ExoPlayer.Builder(context).build()
+    val player: ExoPlayer = ExoPlayer.Builder(context).setLoadControl(loadControl).build()
     private var eventSink: EventSink? = null
 
     override fun onPlaybackStateChanged(playbackState: Int) {
@@ -202,6 +214,18 @@ class VideoPreviewApiImpl(
             return videoPreview.player.getCurrentPosition()
         }
         return 0
+    }
+
+    @UnstableApi
+    override fun seekTo(textureId: Long, embedded: Boolean, position: Long) {
+        if (!embedded) {
+            val videoSource = videosSources[textureId]
+            videoSource.player.seekTo(position);
+        }
+        if (embedded) {
+            val videoPreview = videosPreviews[textureId]
+            videoPreview.player.seekTo(position);
+        }
     }
 
     @UnstableApi
