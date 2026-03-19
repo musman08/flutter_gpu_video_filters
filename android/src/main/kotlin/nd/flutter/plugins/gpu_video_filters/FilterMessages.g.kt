@@ -59,8 +59,8 @@ private open class FilterMessagesPigeonCodec : StandardMessageCodec() {
 
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface FilterApi {
-  fun create(vertexShader: String, fragmentShader: String, defaults: Map<String, Double>, arrays: Map<String, DoubleArray>, texture: String?): Long
-  fun exportVideoFile(filterId: Long, asset: Boolean, input: String, output: String, format: String, period: Long): Long
+  fun create(vertexShader: String, fragmentShader: String, defaults: Map<String, Double>, arrays: Map<String, DoubleArray>, textures: List<String>?): Long
+  fun exportVideoFile(filterId: Long, asset: Boolean, input: String, output: String, format: String, period: Long, height: Long?): Long
   fun setFloatParameter(filterId: Long, key: String, value: Double)
   fun setFloatArrayParameter(filterId: Long, key: String, value: DoubleArray)
   fun setBitmapParameter(filterId: Long, key: String, data: ByteArray)
@@ -85,9 +85,9 @@ interface FilterApi {
             val fragmentShaderArg = args[1] as String
             val defaultsArg = args[2] as Map<String, Double>
             val arraysArg = args[3] as Map<String, DoubleArray>
-            val textureArg = args[4] as String?
+            val texturesArg = args[4] as List<String>?
             val wrapped: List<Any?> = try {
-              listOf(api.create(vertexShaderArg, fragmentShaderArg, defaultsArg, arraysArg, textureArg))
+              listOf(api.create(vertexShaderArg, fragmentShaderArg, defaultsArg, arraysArg, texturesArg))
             } catch (exception: Throwable) {
               FilterMessagesPigeonUtils.wrapError(exception)
             }
@@ -108,8 +108,9 @@ interface FilterApi {
             val outputArg = args[3] as String
             val formatArg = args[4] as String
             val periodArg = args[5] as Long
+            val heightArg = args[6] as Long?
             val wrapped: List<Any?> = try {
-              listOf(api.exportVideoFile(filterIdArg, assetArg, inputArg, outputArg, formatArg, periodArg))
+              listOf(api.exportVideoFile(filterIdArg, assetArg, inputArg, outputArg, formatArg, periodArg, heightArg))
             } catch (exception: Throwable) {
               FilterMessagesPigeonUtils.wrapError(exception)
             }
@@ -232,6 +233,7 @@ interface VideoPreviewApi {
   fun dispose(textureId: Long, embedded: Boolean)
   fun getDuration(textureId: Long, embedded: Boolean): Long
   fun getCurrentPosition(textureId: Long, embedded: Boolean): Long
+  fun seekTo(textureId: Long, embedded: Boolean, position: Long)
 
   companion object {
     /** The codec used by VideoPreviewApi. */
@@ -401,6 +403,26 @@ interface VideoPreviewApi {
             val embeddedArg = args[1] as Boolean
             val wrapped: List<Any?> = try {
               listOf(api.getCurrentPosition(textureIdArg, embeddedArg))
+            } catch (exception: Throwable) {
+              FilterMessagesPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_gpu_video_filters.VideoPreviewApi.seekTo$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val textureIdArg = args[0] as Long
+            val embeddedArg = args[1] as Boolean
+            val positionArg = args[2] as Long
+            val wrapped: List<Any?> = try {
+              api.seekTo(textureIdArg, embeddedArg, positionArg)
+              listOf(null)
             } catch (exception: Throwable) {
               FilterMessagesPigeonUtils.wrapError(exception)
             }
