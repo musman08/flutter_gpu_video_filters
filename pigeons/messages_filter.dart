@@ -9,7 +9,9 @@ import 'package:pigeon/pigeon.dart';
     dartOut: 'lib/src/messages/filter_messages.g.dart',
     kotlinOut:
         'android/src/main/kotlin/nd/flutter/plugins/gpu_video_filters/FilterMessages.g.kt',
-    kotlinOptions: KotlinOptions(package: 'nd.flutter.plugins.gpu_video_filters'),
+    kotlinOptions: KotlinOptions(
+      package: 'nd.flutter.plugins.gpu_video_filters',
+    ),
     copyrightHeader: 'pigeons/copyright.txt',
   ),
 )
@@ -20,7 +22,7 @@ abstract class FilterApi {
     String fragmentShader,
     Map<String, double> defaults,
     Map<String, Float64List> arrays,
-    String? texture,
+    List<String>? textures,
   );
 
   int exportVideoFile(
@@ -30,6 +32,7 @@ abstract class FilterApi {
     String output,
     String format,
     int period,
+    int? height,
   );
 
   void setFloatParameter(int filterId, String key, double value);
@@ -67,4 +70,6 @@ abstract class VideoPreviewApi {
   int getDuration(int textureId, bool embedded);
 
   int getCurrentPosition(int textureId, bool embedded);
+
+  void seekTo(int textureId, bool embedded, int position);
 }

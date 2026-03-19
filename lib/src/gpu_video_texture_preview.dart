@@ -91,4 +91,8 @@ class GPUVideoPreviewController extends VideoPreviewController {
     return await _api.getDuration(textureId, _embedded);
   }
 
+  @override
+  Future<void> seekTo(int position) async {
+    return await _api.seekTo(textureId, _embedded, position);
+  }
 }

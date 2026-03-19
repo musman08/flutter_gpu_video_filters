@@ -36,5 +36,7 @@ abstract class VideoPreviewController {
 
   Future<int> getCurrentPosition();
 
+  Future<void> seekTo(int position);
+
   Future<int> getDuration();
 }

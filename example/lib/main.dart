@@ -1,14 +1,10 @@
-//ignore_for_file: use_build_context_synchronously
 import 'dart:async';
 import 'dart:io' show File;
 import 'dart:math';
-
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart' hide Rect;
 import 'package:flutter_gpu_video_filters/flutter_gpu_video_filters.dart';
 import 'package:flutter_gpu_filters_interface/flutter_gpu_filters_interface.dart';
-import 'package:photo_manager/photo_manager.dart';
-
 import 'approved_filters.dart';
 import 'filters.dart';
 
@@ -134,13 +130,14 @@ class _FilterPageState extends State<FilterPage> {
   void initState() {
     super.initState();
     _prepare().whenComplete(() => setState(() {}));
-    _updateParameter = Stream.periodic(const Duration(seconds: 1)).listen((
+    _updateParameter = Stream.periodic(const Duration(seconds: 5)).listen((
       event,
     ) async {
       if (mounted) {
         final conf = widget.configuration;
         if (conf is GPUBrightnessConfiguration) {
-          conf.brightness = random.nextDouble() * 2 - 1;
+          // conf.brightness = random.nextDouble() * 2 - 1;
+          conf.brightness = 0.01;
           await conf.update();
         } else if (conf is GPUMonochromeConfiguration) {
           conf.intensity = random.nextDouble();
@@ -240,6 +237,7 @@ class _FilterPageState extends State<FilterPage> {
             ? AssetInputSource(asset)
             : FileInputSource(latestFile!),
         output,
+        // height: 1080,
       ),
     );
     await for (final progress in processStream) {
@@ -353,6 +351,7 @@ class _FilterPageState2 extends State<FilterPage2> {
             ? AssetInputSource(asset)
             : FileInputSource(latestFile!),
         output,
+        height: 1080,
       ),
     );
     await for (final progress in processStream) {
@@ -368,24 +367,5 @@ class _FilterPageState2 extends State<FilterPage2> {
 }
 
 Future<void> _saveFile(File input) async {
-  try {
-    final status = await PhotoManager.requestPermissionExtend(
-      requestOption: const PermissionRequestOption(
-        androidPermission: AndroidPermission(
-          type: RequestType.video,
-          mediaLocation: false,
-        ),
-      ),
-    );
-    if (status.isAuth || status.hasAccess) {
-      await PhotoManager.editor.saveVideo(
-        input,
-        title: input.uri.pathSegments.last,
-      );
-    }
-  } catch (e, s) {
-    debugPrint('Error saving file to gallery: $e');
-    debugPrintStack(stackTrace: s);
-    rethrow;
-  }
+  // await Gal.putVideo(input.path);
 }

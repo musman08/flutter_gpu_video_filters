@@ -51,14 +51,14 @@ class FilterApi {
 
   final String pigeonVar_messageChannelSuffix;
 
-  Future<int> create(String vertexShader, String fragmentShader, Map<String, double> defaults, Map<String, Float64List> arrays, String? texture) async {
+  Future<int> create(String vertexShader, String fragmentShader, Map<String, double> defaults, Map<String, Float64List> arrays, List<String>? textures) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.flutter_gpu_video_filters.FilterApi.create$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[vertexShader, fragmentShader, defaults, arrays, texture]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[vertexShader, fragmentShader, defaults, arrays, textures]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -79,14 +79,14 @@ class FilterApi {
     }
   }
 
-  Future<int> exportVideoFile(int filterId, bool asset, String input, String output, String format, int period) async {
+  Future<int> exportVideoFile(int filterId, bool asset, String input, String output, String format, int period, int? height) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.flutter_gpu_video_filters.FilterApi.exportVideoFile$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[filterId, asset, input, output, format, period]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[filterId, asset, input, output, format, period, height]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -455,6 +455,29 @@ class VideoPreviewApi {
       );
     } else {
       return (pigeonVar_replyList[0] as int?)!;
+    }
+  }
+
+  Future<void> seekTo(int textureId, bool embedded, int position) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.flutter_gpu_video_filters.VideoPreviewApi.seekTo$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[textureId, embedded, position]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
     }
   }
 }

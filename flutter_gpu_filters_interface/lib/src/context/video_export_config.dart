@@ -6,11 +6,13 @@ class VideoExportConfig {
   final PathInputSource source;
   final File output;
   final VideoExportFormat format;
+  final int? height;
 
   VideoExportConfig(
     this.source,
     this.output, {
     this.format = VideoExportFormat.auto,
+    this.height,
   });
 }
 
